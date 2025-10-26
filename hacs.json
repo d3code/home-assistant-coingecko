@@ -1,0 +1,8 @@
+{
+  "name": "CoinGecko",
+  "content_in_root": false,
+  "filename": "coingecko",
+  "country": ["*"],
+  "render_readme": true,
+  "homeassistant": "2023.1.0"
+}

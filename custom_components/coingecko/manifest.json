@@ -1,0 +1,12 @@
+{
+  "domain": "coingecko",
+  "name": "CoinGecko",
+  "version": "1.0.0",
+  "documentation": "https://github.com/lukesands/home-assistant-coingecko",
+  "issue_tracker": "https://github.com/lukesands/home-assistant-coingecko/issues",
+  "codeowners": ["@lukesands"],
+  "config_flow": true,
+  "dependencies": [],
+  "iot_class": "cloud_polling",
+  "integration_type": "service"
+}
