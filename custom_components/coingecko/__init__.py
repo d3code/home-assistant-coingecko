@@ -100,17 +100,11 @@ class CoinGeckoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 coin_symbol = pair[:3]  # First 3 characters (e.g., BTC)
                 currency_symbol = pair[3:]  # Rest (e.g., AUD)
                 
-                # Map coin symbol to CoinGecko ID
-                coin_id = COIN_MAPPINGS.get(coin_symbol.upper())
-                if not coin_id:
-                    _LOGGER.warning(f"Unknown coin symbol: {coin_symbol}")
-                    continue
+                # Use coin symbol directly as CoinGecko ID (lowercase)
+                coin_id = coin_symbol.lower()
                 
                 # Convert currency to lowercase for API
                 currency = currency_symbol.lower()
-                if currency not in SUPPORTED_CURRENCIES:
-                    _LOGGER.warning(f"Unsupported currency: {currency}")
-                    continue
                 
                 coin_ids.append(coin_id)
                 if currency not in currencies:
@@ -145,10 +139,10 @@ class CoinGeckoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 for pair in trading_pairs:
                     coin_symbol = pair[:3].upper()
                     currency_symbol = pair[3:].upper()
-                    coin_id = COIN_MAPPINGS.get(coin_symbol)
+                    coin_id = coin_symbol.lower()  # Use coin symbol directly
                     currency = currency_symbol.lower()
                     
-                    if coin_id and currency in SUPPORTED_CURRENCIES and coin_id in data:
+                    if coin_id in data:
                         coin_data = data[coin_id]
                         if currency in coin_data:
                             processed_data[pair] = {
