@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_TRADING_PAIRS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ async def async_setup_entry(
     """Set up CoinGecko sensor entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     
-    trading_pairs = config_entry.data.get("trading_pairs", ["BTCAUD"])
+    trading_pairs = config_entry.data.get(CONF_TRADING_PAIRS, ["BTCAUD"])
     
     entities = []
     for pair in trading_pairs:
