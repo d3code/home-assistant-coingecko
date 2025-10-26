@@ -172,18 +172,3 @@ class CoinGeckoOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=schema)
 
 
-# Register the options flow handler
-@config_entries.HANDLERS.register(DOMAIN)
-class CoinGeckoOptionsFlowHandler(config_entries.OptionsFlowHandler):
-    """Handle options flow for CoinGecko."""
-    
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow handler."""
-        super().__init__(config_entry)
-        self._options_flow = CoinGeckoOptionsFlow(config_entry)
-    
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Manage the options."""
-        return await self._options_flow.async_step_init(user_input)
-
-
