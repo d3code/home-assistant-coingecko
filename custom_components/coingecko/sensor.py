@@ -73,7 +73,7 @@ class CoinGeckoSensor(CoordinatorEntity, SensorEntity):
         attributes = {
             "coin_id": data.get("coin_id"),
             "currency": data.get("currency"),
-            "last_updated": self.coordinator.last_update_time.isoformat() if self.coordinator.last_update_time else None,
+            "last_updated": self.coordinator.last_update_success.isoformat() if self.coordinator.last_update_success else None,
         }
         
         # Add optional attributes if available

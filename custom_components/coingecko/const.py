@@ -109,5 +109,5 @@ SUPPORTED_CURRENCIES = [
     "php", "myr", "idr", "vnd", "bdt", "pkr", "lkr", "npr", "mmk",
     "khr", "lak", "mnt", "kzt", "uzs", "amd", "azn", "gel", "kgs", "tjs",
     "tmt", "afn", "iqd", "irr", "jod", "kwd", "lbp", "omr", "qar", "sar",
-    "syp", "aed", "yer", "bhd"
+    "syp", "aed", "yer", "bhd", "usdt", "usdc", "dai", "busd"
 ]
