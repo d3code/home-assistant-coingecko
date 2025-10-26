@@ -1,10 +1,12 @@
 {
   "domain": "coingecko",
   "name": "CoinGecko",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "documentation": "https://github.com/d3code/home-assistant-coingecko",
   "issue_tracker": "https://github.com/d3code/home-assistant-coingecko/issues",
-  "codeowners": ["@d3code"],
+  "codeowners": [
+    "@d3code"
+  ],
   "config_flow": true,
   "dependencies": [],
   "iot_class": "cloud_polling",
