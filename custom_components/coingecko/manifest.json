@@ -1,7 +1,7 @@
 {
   "domain": "coingecko",
   "name": "CoinGecko",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "documentation": "https://github.com/d3code/home-assistant-coingecko",
   "issue_tracker": "https://github.com/d3code/home-assistant-coingecko/issues",
   "codeowners": [
