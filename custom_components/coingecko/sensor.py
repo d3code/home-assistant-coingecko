@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, CONF_TRADING_PAIRS
+from .const import DOMAIN, CONF_COIN_ID, CONF_CURRENCY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +23,14 @@ async def async_setup_entry(
     """Set up CoinGecko sensor entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     
-    trading_pairs = config_entry.data.get(CONF_TRADING_PAIRS, ["BTCAUD"])
+    coin_id = config_entry.data.get(CONF_COIN_ID, "bitcoin")
+    currency = config_entry.data.get(CONF_CURRENCY, "aud")
     
-    entities = []
-    for pair in trading_pairs:
-        entities.append(CoinGeckoSensor(coordinator, pair))
+    # Create a single sensor for the coin/currency pair
+    trading_pair = f"{coin_id.upper()}{currency.upper()}"
+    entity = CoinGeckoSensor(coordinator, trading_pair)
     
-    async_add_entities(entities)
+    async_add_entities([entity])
 
 
 class CoinGeckoSensor(CoordinatorEntity, SensorEntity):

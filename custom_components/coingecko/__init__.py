@@ -15,12 +15,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     API_BASE_URL,
     CONF_SCAN_INTERVAL,
-    CONF_TRADING_PAIRS,
-    COIN_MAPPINGS,
+    CONF_COIN_ID,
+    CONF_CURRENCY,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SIMPLE_PRICE_ENDPOINT,
-    SUPPORTED_CURRENCIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,46 +77,22 @@ class CoinGeckoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
-            trading_pairs = self.entry.data.get(CONF_TRADING_PAIRS, ["BTCAUD"])
+            coin_id = self.entry.data.get(CONF_COIN_ID, "bitcoin")
+            currency = self.entry.data.get(CONF_CURRENCY, "aud")
             
-            # Ensure trading_pairs is a list
-            if isinstance(trading_pairs, str):
-                trading_pairs = [trading_pairs]
-            
-            if not trading_pairs:
-                raise UpdateFailed("No trading pairs configured")
+            if not coin_id or not currency:
+                raise UpdateFailed("Coin ID and currency must be configured")
             
             # Create session if it doesn't exist
             if self.session is None:
                 timeout = aiohttp.ClientTimeout(total=30)
                 self.session = aiohttp.ClientSession(timeout=timeout)
             
-            # Parse trading pairs and prepare API request
-            coin_ids = []
-            currencies = []
-            
-            for pair in trading_pairs:
-                coin_symbol = pair[:3]  # First 3 characters (e.g., BTC)
-                currency_symbol = pair[3:]  # Rest (e.g., AUD)
-                
-                # Use coin symbol directly as CoinGecko ID (lowercase)
-                coin_id = coin_symbol.lower()
-                
-                # Convert currency to lowercase for API
-                currency = currency_symbol.lower()
-                
-                coin_ids.append(coin_id)
-                if currency not in currencies:
-                    currencies.append(currency)
-            
-            if not coin_ids or not currencies:
-                raise UpdateFailed("No valid trading pairs configured")
-            
             # Make API request
             url = f"{API_BASE_URL}{SIMPLE_PRICE_ENDPOINT}"
             params = {
-                "ids": ",".join(coin_ids),
-                "vs_currencies": ",".join(currencies),
+                "ids": coin_id.lower(),
+                "vs_currencies": currency.lower(),
                 "include_24hr_change": "true",
                 "include_24hr_vol": "true",
                 "include_market_cap": "true",
@@ -136,23 +111,20 @@ class CoinGeckoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 
                 # Process and structure the data
                 processed_data = {}
-                for pair in trading_pairs:
-                    coin_symbol = pair[:3].upper()
-                    currency_symbol = pair[3:].upper()
-                    coin_id = coin_symbol.lower()  # Use coin symbol directly
-                    currency = currency_symbol.lower()
-                    
-                    if coin_id in data:
-                        coin_data = data[coin_id]
-                        if currency in coin_data:
-                            processed_data[pair] = {
-                                "price": coin_data[currency],
-                                "coin_id": coin_id,
-                                "currency": currency_symbol,
-                                "change_24h": coin_data.get(f"{currency}_24h_change"),
-                                "volume_24h": coin_data.get(f"{currency}_24h_vol"),
-                                "market_cap": coin_data.get(f"{currency}_market_cap"),
-                            }
+                coin_id_lower = coin_id.lower()
+                currency_lower = currency.lower()
+                
+                if coin_id_lower in data:
+                    coin_data = data[coin_id_lower]
+                    if currency_lower in coin_data:
+                        processed_data[f"{coin_id.upper()}{currency.upper()}"] = {
+                            "price": coin_data[currency_lower],
+                            "coin_id": coin_id_lower,
+                            "currency": currency.upper(),
+                            "change_24h": coin_data.get(f"{currency_lower}_24h_change"),
+                            "volume_24h": coin_data.get(f"{currency_lower}_24h_vol"),
+                            "market_cap": coin_data.get(f"{currency_lower}_market_cap"),
+                        }
                 
                 return processed_data
                 

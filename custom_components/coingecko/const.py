@@ -9,7 +9,8 @@ SIMPLE_PRICE_ENDPOINT = "/simple/price"
 
 # Configuration keys
 CONF_SCAN_INTERVAL = "scan_interval"
-CONF_TRADING_PAIRS = "trading_pairs"
+CONF_COIN_ID = "coin_id"
+CONF_CURRENCY = "currency"
 
 # Common coin mappings (symbol -> CoinGecko ID)
 COIN_MAPPINGS = {

@@ -6,13 +6,14 @@
         "description": "Configure CoinGecko integration settings",
         "data": {
           "scan_interval": "Update interval (seconds)",
-          "trading_pairs": "Trading pairs (comma-separated, e.g., BTCAUD,ETHUSD)"
+          "coin_id": "Coin ID (e.g., bitcoin, ethereum, tether)",
+          "currency": "Currency (e.g., usd, aud, eur)"
         }
       }
     },
     "error": {
-      "no_trading_pairs": "At least one trading pair must be specified",
-      "invalid_pair_format": "Trading pairs must be in format like BTCAUD (6+ characters, letters only)",
+      "no_coin_id": "Coin ID must be specified",
+      "no_currency": "Currency must be specified",
       "connection_error": "Failed to connect to CoinGecko API",
       "unknown": "Unknown error occurred"
     },
@@ -27,13 +28,14 @@
         "description": "Adjust CoinGecko integration settings",
         "data": {
           "scan_interval": "Update interval (seconds)",
-          "trading_pairs": "Trading pairs (comma-separated, e.g., BTCAUD,ETHUSD)"
+          "coin_id": "Coin ID (e.g., bitcoin, ethereum, tether)",
+          "currency": "Currency (e.g., usd, aud, eur)"
         }
       }
     },
     "error": {
-      "no_trading_pairs": "At least one trading pair must be specified",
-      "invalid_pair_format": "Trading pairs must be in format like BTCAUD (6+ characters, letters only)"
+      "no_coin_id": "Coin ID must be specified",
+      "no_currency": "Currency must be specified"
     }
   }
 }

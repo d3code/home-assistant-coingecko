@@ -12,7 +12,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_SCAN_INTERVAL,
-    CONF_TRADING_PAIRS,
+    CONF_COIN_ID,
+    CONF_CURRENCY,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -24,7 +25,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=86400)
         ),
-        vol.Required(CONF_TRADING_PAIRS, default="BTCAUD"): str,
+        vol.Required(CONF_COIN_ID, default="bitcoin"): str,
+        vol.Required(CONF_CURRENCY, default="aud"): str,
     }
 )
 
@@ -33,7 +35,8 @@ STEP_OPTIONS_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=86400)
         ),
-        vol.Required(CONF_TRADING_PAIRS, default="BTCAUD"): str,
+        vol.Required(CONF_COIN_ID, default="bitcoin"): str,
+        vol.Required(CONF_CURRENCY, default="aud"): str,
     }
 )
 
@@ -52,46 +55,30 @@ class CoinGeckoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        # Validate trading pairs format
-        trading_pairs_str = user_input[CONF_TRADING_PAIRS]
-        if not trading_pairs_str or not trading_pairs_str.strip():
+        # Validate coin ID and currency
+        coin_id = user_input[CONF_COIN_ID].strip().lower()
+        currency = user_input[CONF_CURRENCY].strip().lower()
+        
+        if not coin_id:
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
-                errors={"base": "no_trading_pairs"},
+                errors={"base": "no_coin_id"},
             )
-
-        # Parse trading pairs
-        try:
-            trading_pairs = [pair.strip().upper() for pair in trading_pairs_str.split(",") if pair.strip()]
-        except Exception:
+        
+        if not currency:
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
-                errors={"base": "invalid_pair_format"},
+                errors={"base": "no_currency"},
             )
-
-        if not trading_pairs:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=STEP_USER_DATA_SCHEMA,
-                errors={"base": "no_trading_pairs"},
-            )
-
-        # Validate trading pair format (should be like BTCAUD, ETHUSD, etc.)
-        for pair in trading_pairs:
-            if len(pair) < 6 or not pair.isalpha():
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=STEP_USER_DATA_SCHEMA,
-                    errors={"base": "invalid_pair_format"},
-                )
 
         return self.async_create_entry(
-            title="CoinGecko",
+            title=f"CoinGecko {coin_id.upper()}/{currency.upper()}",
             data={
                 CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
-                CONF_TRADING_PAIRS: trading_pairs,
+                CONF_COIN_ID: coin_id,
+                CONF_CURRENCY: currency,
             },
         )
 
@@ -112,46 +99,30 @@ class CoinGeckoOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
-            # Validate trading pairs format
-            trading_pairs_str = user_input[CONF_TRADING_PAIRS]
-            if not trading_pairs_str or not trading_pairs_str.strip():
+            # Validate coin ID and currency
+            coin_id = user_input[CONF_COIN_ID].strip().lower()
+            currency = user_input[CONF_CURRENCY].strip().lower()
+            
+            if not coin_id:
                 return self.async_show_form(
                     step_id="init",
                     data_schema=STEP_OPTIONS_DATA_SCHEMA,
-                    errors={"base": "no_trading_pairs"},
+                    errors={"base": "no_coin_id"},
                 )
-
-            # Parse trading pairs
-            try:
-                trading_pairs = [pair.strip().upper() for pair in trading_pairs_str.split(",") if pair.strip()]
-            except Exception:
+            
+            if not currency:
                 return self.async_show_form(
                     step_id="init",
                     data_schema=STEP_OPTIONS_DATA_SCHEMA,
-                    errors={"base": "invalid_pair_format"},
+                    errors={"base": "no_currency"},
                 )
-
-            if not trading_pairs:
-                return self.async_show_form(
-                    step_id="init",
-                    data_schema=STEP_OPTIONS_DATA_SCHEMA,
-                    errors={"base": "no_trading_pairs"},
-                )
-
-            # Validate trading pair format
-            for pair in trading_pairs:
-                if len(pair) < 6 or not pair.isalpha():
-                    return self.async_show_form(
-                        step_id="init",
-                        data_schema=STEP_OPTIONS_DATA_SCHEMA,
-                        errors={"base": "invalid_pair_format"},
-                    )
 
             return self.async_create_entry(
                 title="",
                 data={
                     CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
-                    CONF_TRADING_PAIRS: trading_pairs,
+                    CONF_COIN_ID: coin_id,
+                    CONF_CURRENCY: currency,
                 },
             )
 
@@ -163,8 +134,12 @@ class CoinGeckoOptionsFlow(config_entries.OptionsFlow):
                     CONF_SCAN_INTERVAL, default=current_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
                 ): vol.All(vol.Coerce(int), vol.Range(min=60, max=86400)),
                 vol.Required(
-                    CONF_TRADING_PAIRS,
-                    default=",".join(current_data.get(CONF_TRADING_PAIRS, ["BTCAUD"])),
+                    CONF_COIN_ID,
+                    default=current_data.get(CONF_COIN_ID, "bitcoin"),
+                ): str,
+                vol.Required(
+                    CONF_CURRENCY,
+                    default=current_data.get(CONF_CURRENCY, "aud"),
                 ): str,
             }
         )
