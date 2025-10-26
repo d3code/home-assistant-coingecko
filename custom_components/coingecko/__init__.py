@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .config_flow import CoinGeckoOptionsFlow
 from .const import (
     API_BASE_URL,
     CONF_SCAN_INTERVAL,
@@ -49,11 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
-    """Set up the CoinGecko component."""
-    # Register options flow handler
-    hass.config_entries.flow.async_register_options_flow(DOMAIN, CoinGeckoOptionsFlow)
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
