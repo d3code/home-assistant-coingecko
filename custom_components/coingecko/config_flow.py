@@ -99,12 +99,6 @@ class CoinGeckoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import from configuration.yaml."""
         return await self.async_step_user(import_info)
 
-    @staticmethod
-    @config_entries.CONFIG_FLOW_DISPATCHER.register(DOMAIN)
-    async def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> CoinGeckoOptionsFlow:
-        """Get the options flow for this handler."""
-        return CoinGeckoOptionsFlow(config_entry)
-
 
 class CoinGeckoOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for CoinGecko."""
@@ -176,3 +170,10 @@ class CoinGeckoOptionsFlow(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(step_id="init", data_schema=schema)
+
+
+# Register the options flow handler
+@config_entries.HANDLERS.register(DOMAIN)
+class CoinGeckoOptionsFlowHandler(CoinGeckoOptionsFlow):
+    """Handle options flow for CoinGecko."""
+    pass
