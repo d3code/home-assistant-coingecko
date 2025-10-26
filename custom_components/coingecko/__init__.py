@@ -48,7 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.async_close()
 
     return unload_ok
 
@@ -64,7 +65,7 @@ class CoinGeckoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
         self.entry = entry
-        self.session = aiohttp.ClientSession()
+        self.session: aiohttp.ClientSession | None = None
         
         scan_interval = entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         
@@ -79,6 +80,10 @@ class CoinGeckoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update data via library."""
         try:
             trading_pairs = self.entry.data.get(CONF_TRADING_PAIRS, ["BTCAUD"])
+            
+            # Create session if it doesn't exist
+            if self.session is None:
+                self.session = aiohttp.ClientSession()
             
             # Parse trading pairs and prepare API request
             coin_ids = []
@@ -152,4 +157,6 @@ class CoinGeckoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_close(self) -> None:
         """Close the session."""
-        await self.session.close()
+        if self.session:
+            await self.session.close()
+            self.session = None

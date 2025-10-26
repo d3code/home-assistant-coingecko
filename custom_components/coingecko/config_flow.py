@@ -24,10 +24,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=86400)
         ),
-        vol.Required(CONF_TRADING_PAIRS, default=["BTCAUD"]): vol.All(
-            vol.Coerce(str),
-            lambda x: [pair.strip().upper() for pair in x.split(",") if pair.strip()],
-        ),
+        vol.Required(CONF_TRADING_PAIRS, default="BTCAUD"): str,
     }
 )
 
@@ -36,10 +33,7 @@ STEP_OPTIONS_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=86400)
         ),
-        vol.Required(CONF_TRADING_PAIRS, default=["BTCAUD"]): vol.All(
-            vol.Coerce(str),
-            lambda x: [pair.strip().upper() for pair in x.split(",") if pair.strip()],
-        ),
+        vol.Required(CONF_TRADING_PAIRS, default="BTCAUD"): str,
     }
 )
 
@@ -59,7 +53,24 @@ class CoinGeckoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # Validate trading pairs format
-        trading_pairs = user_input[CONF_TRADING_PAIRS]
+        trading_pairs_str = user_input[CONF_TRADING_PAIRS]
+        if not trading_pairs_str or not trading_pairs_str.strip():
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors={"base": "no_trading_pairs"},
+            )
+
+        # Parse trading pairs
+        try:
+            trading_pairs = [pair.strip().upper() for pair in trading_pairs_str.split(",") if pair.strip()]
+        except Exception:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors={"base": "invalid_pair_format"},
+            )
+
         if not trading_pairs:
             return self.async_show_form(
                 step_id="user",
@@ -88,6 +99,12 @@ class CoinGeckoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import from configuration.yaml."""
         return await self.async_step_user(import_info)
 
+    @staticmethod
+    @config_entries.CONFIG_FLOW_DISPATCHER.register(DOMAIN)
+    async def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> CoinGeckoOptionsFlow:
+        """Get the options flow for this handler."""
+        return CoinGeckoOptionsFlow(config_entry)
+
 
 class CoinGeckoOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for CoinGecko."""
@@ -102,7 +119,24 @@ class CoinGeckoOptionsFlow(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             # Validate trading pairs format
-            trading_pairs = user_input[CONF_TRADING_PAIRS]
+            trading_pairs_str = user_input[CONF_TRADING_PAIRS]
+            if not trading_pairs_str or not trading_pairs_str.strip():
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=STEP_OPTIONS_DATA_SCHEMA,
+                    errors={"base": "no_trading_pairs"},
+                )
+
+            # Parse trading pairs
+            try:
+                trading_pairs = [pair.strip().upper() for pair in trading_pairs_str.split(",") if pair.strip()]
+            except Exception:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=STEP_OPTIONS_DATA_SCHEMA,
+                    errors={"base": "invalid_pair_format"},
+                )
+
             if not trading_pairs:
                 return self.async_show_form(
                     step_id="init",
@@ -137,10 +171,7 @@ class CoinGeckoOptionsFlow(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_TRADING_PAIRS,
                     default=",".join(current_data.get(CONF_TRADING_PAIRS, ["BTCAUD"])),
-                ): vol.All(
-                    vol.Coerce(str),
-                    lambda x: [pair.strip().upper() for pair in x.split(",") if pair.strip()],
-                ),
+                ): str,
             }
         )
 
