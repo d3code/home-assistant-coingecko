@@ -30,10 +30,13 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up CoinGecko from a config entry."""
     coordinator = CoinGeckoDataUpdateCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    
+    # Try to refresh data, but don't fail setup if it doesn't work initially
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception as err:
+        _LOGGER.warning("Failed to refresh data on setup: %s", err)
+        # Continue with setup even if initial refresh fails
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -81,9 +84,17 @@ class CoinGeckoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             trading_pairs = self.entry.data.get(CONF_TRADING_PAIRS, ["BTCAUD"])
             
+            # Ensure trading_pairs is a list
+            if isinstance(trading_pairs, str):
+                trading_pairs = [trading_pairs]
+            
+            if not trading_pairs:
+                raise UpdateFailed("No trading pairs configured")
+            
             # Create session if it doesn't exist
             if self.session is None:
-                self.session = aiohttp.ClientSession()
+                timeout = aiohttp.ClientTimeout(total=30)
+                self.session = aiohttp.ClientSession(timeout=timeout)
             
             # Parse trading pairs and prepare API request
             coin_ids = []
@@ -126,7 +137,12 @@ class CoinGeckoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if response.status != 200:
                     raise UpdateFailed(f"API request failed with status {response.status}")
                 
-                data = await response.json()
+                try:
+                    data = await response.json()
+                except aiohttp.ContentTypeError as err:
+                    raise UpdateFailed(f"Invalid JSON response from API: {err}")
+                except Exception as err:
+                    raise UpdateFailed(f"Failed to parse API response: {err}")
                 
                 # Process and structure the data
                 processed_data = {}
